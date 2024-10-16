@@ -1,0 +1,158 @@
+//==============================================================================================
+//	PRT563 - ADVANCED DATA MANAGEMENT
+// 	ASIGNMENT 4 - GROUP 9
+//	Design and implement a graph database using Neo4j
+//==============================================================================================
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Graph database queries
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Query 1: List out all customers and their transaction for ones who spend more than $50 but less than $60 for a transaction
+MATCH (c:Customer)-[:PAY_FOR]->(t:Transaction)
+WHERE t.TotalAmount > 50 and t.TotalAmount < 60
+RETURN c, t;
+
+// Query 2: Finding customers spent more than $60 for a transaction
+MATCH (c:Customer)-[:PAY_FOR]->(t:Transaction)
+WHERE t.TotalAmount > 60
+RETURN DISTINCT c;
+
+// Query 3: List out all VIP customers and their transaction for ones who spent more than $60
+MATCH (c:Customer)-[:BELONGS_TO]->(t:Tier {TierName: 'VIP'}), 
+      (c)-[:PAY_FOR]->(transaction:Transaction)
+WHERE transaction.TotalAmount >=60
+RETURN c.CustomerID, c.Name, transaction.TransactionID, transaction.TotalAmount;
+
+//Query 4: Finding customers who have the highest spending at Fresh Point café
+MATCH (c:Customer)-[:PAY_FOR]->(t:Transaction)  // Match customers and their transactions
+WITH c, SUM(t.TotalAmount) AS totalSpent  // Calculate total spending per customer
+ORDER BY totalSpent DESC  // Order by total spent in descending order
+LIMIT 1  // Return only the top customer
+MATCH (c)-[rel:BELONGS_TO]->(tier:Tier)  // Match the customer to their tier (VIP or Regular)
+WHERE rel.EndDate IS NULL  // Only include tiers where EndDate is NULL
+RETURN c.CustomerID, c.Name, totalSpent, tier.TierName;
+
+// Query 5: Finding the branch having the highest spending in 13/10/2024
+MATCH (t:Transaction)
+WHERE t.TransactionDate = '13/10/2024'  // Filter transactions for 13th October 2024
+WITH t.Branch AS branchID, SUM(t.TotalAmount) AS totalRevenue
+ORDER BY totalRevenue DESC  // Order by total revenue in descending order
+LIMIT 1
+match(b:Branch {branchID:branchID})
+RETURN 
+b.branchName, 
+branchID, totalRevenue;
+
+// Query 6: List out all food at Fresh Point Café being gluten free
+MATCH (item)-[:CLASSIFIED_TO]->(d:Diet {DietName: "GlutenFree"})
+RETURN item.ItemID, item.ItemName, item.ItemDescription;
+
+// Query 7: List out all customers and their coupon for any one whose name start with letter ‘a’
+MATCH (c:Customer)-[:HAS_COUPON]->(coupon:Coupon)
+WHERE TOLOWER(c.Name) STARTS WITH 'a'
+RETURN c.Name, coupon.CouponID, coupon.CouponCode, coupon.Description, coupon.DiscountValue, coupon.IssueDate;
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//Centrality algorithms
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//Business Problem – Avoid wasting marketing efforts on customer
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//Finding the Most Loyal Customers (Top Spenders)
+// Create Graph Projection
+CALL gds.graph.project(
+  'loyaltySpendingGraph',
+  ['Customer', 'Transaction'],  // Include both Customer and Transaction nodes
+  {
+    PAY_FOR: {
+      type: 'PAY_FOR',
+      orientation: 'UNDIRECTED'
+    }
+  }
+)
+YIELD graphName, nodeCount, relationshipCount;
+
+// Algorithm: PageRank to Find Top Spenders
+CALL gds.pageRank.stream('loyaltySpendingGraph')
+YIELD nodeId, score
+WITH gds.util.asNode(nodeId) AS node, score
+WHERE labels(node) = ['Customer']  // Filter for Customer nodes only
+MATCH (node)-[:PAY_FOR]->(t:Transaction)  // Match customer with their transactions
+RETURN node.CustomerID AS customerID, node.Name AS customerName, SUM(t.TotalAmount) AS totalAmount, score
+ORDER BY score DESC
+LIMIT 5;
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//Centrality algorithms
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//Business Problem – Business Problem – Optimising Staffing Levels and Shift Management
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//Analyzing Staff Performance Based on Processed Transactions
+CALL gds.graph.project(
+  'staffPerformanceGraph',
+  ['Staff', 'Transaction'],
+  {
+    PROCESSES: {
+      type: 'PROCESSES',
+      orientation: 'UNDIRECTED'
+    }
+  }
+)
+YIELD graphName, nodeCount, relationshipCount;
+
+//Algorithm: Degree Centrality to Rank Staff by Transactions Processed
+//Use degree centrality to rank staff based on how many transactions they processed.
+CALL gds.degree.stream('staffPerformanceGraph')
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).name AS staffName, score
+ORDER BY score DESC
+LIMIT 10;
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//Similarity  algorithms
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//Business Problem – Identifying which customers have similar preferences 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Step 1: Create a graph projection for customers who purchase Iced Mocha
+CALL gds.graph.project.cypher(
+  'customerIcedMochaGraph',
+  'MATCH (c:Customer)-[:PAY_FOR]->(t:Transaction)-[:CONTAINS]->(item:DrinkItem {ItemID: 104}) 
+   WITH c, COUNT(t) AS purchaseCount, SUM(t.TotalAmount) AS totalSpend
+// Optional: Define a threshold for "frequent" buyers
+   WHERE purchaseCount > 0
+   RETURN id(c) AS id, purchaseCount, totalSpend',
+  'MATCH (c1:Customer)-[:PAY_FOR]->(t1:Transaction)-[:CONTAINS]->(item1:DrinkItem {ItemID: 104}),
+         (c2:Customer)-[:PAY_FOR]->(t2:Transaction)-[:CONTAINS]->(item2:DrinkItem {ItemID: 104})
+   WHERE id(c1) <> id(c2)
+   RETURN id(c1) AS source, id(c2) AS target'
+);
+
+// Step 2: Run the Node Similarity algorithm with Cosine similarity
+CALL gds.nodeSimilarity.stream('customerIcedMochaGraph', {
+  similarityMetric: 'cosine'
+})
+YIELD node1, node2, similarity
+WITH gds.util.asNode(node1).Name AS customer1, gds.util.asNode(node2).Name AS customer2, similarity
+WHERE similarity > 0.5  // Threshold for significant similarity
+RETURN customer1, customer2, similarity
+ORDER BY similarity DESC;
+
+
+// Step 3: Run the Node Similarity algorithm with Jaccard similarity
+CALL gds.nodeSimilarity.stream('customerIcedMochaGraph', {
+  similarityMetric: 'jaccard'
+})
+YIELD node1, node2, similarity
+WITH gds.util.asNode(node1).Name AS customer1, gds.util.asNode(node2).Name AS customer2, similarity
+WHERE similarity > 0.5  // Threshold for significant similarity
+RETURN customer1, customer2, similarity
+ORDER BY similarity DESC;
+
+// Step 4: Run the Node Similarity algorithm with Overlap correlation
+CALL gds.nodeSimilarity.stream('customerIcedMochaGraph', {
+  similarityMetric: 'overlap'
+})
+YIELD node1, node2, similarity
+WITH gds.util.asNode(node1).Name AS customer1, gds.util.asNode(node2).Name AS customer2, similarity
+WHERE similarity > 0.5  // Threshold for significant similarity
+RETURN customer1, customer2, similarity
+ORDER BY similarity DESC;

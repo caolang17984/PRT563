@@ -1,0 +1,238 @@
+//==============================================================================================
+//	PRT563 - ADVANCED DATA MANAGEMENT
+// 	ASIGNMENT 4 - GROUP 9
+//	Design and implement a graph database using Neo4j
+//==============================================================================================
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Step 1: Customer and Loyalty Tier Setup
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Create Customer Nodes from customers.csv:
+LOAD CSV WITH HEADERS FROM 'file:///customers_.csv' AS row
+CREATE (:Customer {
+    CustomerID: toInteger(row.CustomerID),
+    Name: row.Name,
+    Phone: row.Phone,
+    Email: row.Email,
+    Address: row.Address,
+	DoB: row.DoB
+});
+
+// Create Tier Nodes from tiers.csv
+LOAD CSV WITH HEADERS FROM 'file:///tiers_.csv' AS row
+CREATE (:Tier {
+    TierID: toInteger(row.TierID),
+    TierName: row.TierName,
+    PointPer10Dollar: toInteger(row.PointPer10Dollar)
+});
+
+// Create Relationships from customer_tiers_.csv
+LOAD CSV WITH HEADERS FROM 'file:///customer_tiers_.csv' AS row
+MATCH (c:Customer {CustomerID: toInteger(row.CustomerID)}), (t:Tier {TierID: toInteger(row.TierID)})
+CREATE (c)-[:BELONGS_TO {
+    StartDate: row.StartDate,
+    EndDate: CASE WHEN row.EndDate IS NOT NULL THEN row.EndDate ELSE NULL END,
+    AccumulatedPoints: toInteger(row.AccumulatedPoints),
+    CurrentPoints: toInteger(row.CurrentPoints),
+    LastEarnDate: row.LastEarnDate,
+    LastRedeemDate: row.LastRedeemDate
+}]->(t);
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Step 2: Coupon and Transaction Management
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Create Coupon Nodes from coupons.csv
+LOAD CSV WITH HEADERS FROM 'file:///coupons_.csv' AS row
+CREATE (:Coupon {
+    CouponID: toInteger(row.CouponID),
+    CouponCode: row.CouponCode,
+    Description: row.Description,
+    DiscountValue: toInteger(row.DiscountValue),
+    IssueDate: row.IssueDate
+});
+
+//Create Transaction Nodes from transactions_.csv
+LOAD CSV WITH HEADERS FROM 'file:///transactions_.csv' AS row
+CREATE (:Transaction {
+    TransactionID: toInteger(row.TransactionID),
+    TotalAmount: toInteger(row.TotalAmount),
+    PaymentMethod: row.PaymentMethod,
+    Branch: row.Branch,
+    TransactionDate: row.TransactionDate
+});
+
+// Load Discount
+LOAD CSV WITH HEADERS FROM 'file:///discount_.csv' AS row
+MERGE (p:Discount {
+		DiscountID: toInteger(row.DiscountID), 
+		DiscountCode: row.DiscountCode,
+		DiscountPercent: row.DiscountPercent,
+		IssueDate: row.IssueDate,
+		ExpiredDate: row.ExpiredDate
+		});
+		
+// Create "Pay for" Relationships from customer_transactions_.csv
+LOAD CSV WITH HEADERS FROM 'file:///customer_transactions_.csv' AS row
+MATCH (c:Customer {CustomerID: toInteger(row.CustomerID)}), 
+      (t:Transaction {TransactionID: toInteger(row.TransactionID)})
+OPTIONAL MATCH (coupon:Coupon {CouponCode: row.CouponCode})  // If a coupon was used
+CREATE (c)-[:PAY_FOR {
+    CouponCode: row.CouponCode, 
+    Discount: row.Discount,  
+    EarnedPoints: toInteger(row.EarnedPoints)
+}]->(t);
+
+// Create Relationships Between Customers and Coupons from customer_coupons.csv
+LOAD CSV WITH HEADERS FROM 'file:///customer_coupons_.csv' AS row
+MATCH (c:Customer {CustomerID: toInteger(row.CustomerID)}), 
+      (coupon:Coupon {CouponID: toInteger(row.CouponID)})
+CREATE (c)-[:HAS_COUPON]->(coupon);
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Step 3: Food and Drink Items
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+MERGE (foodCategory:Category {CategoryName: "Food"})
+MERGE (drinkCategory:Category {CategoryName: "Drink"});
+
+// Food items
+LOAD CSV WITH HEADERS FROM 'file:///food_items_.csv' AS row
+MERGE (f:FoodItem {
+    ItemID: toInteger(row.ItemID), 
+    ItemName: row.ItemName, 
+    ItemUnitPrice: toFloat(row.ItemUnitPrice), 
+    ItemDescription: row.ItemDescription
+})
+WITH f, row
+// Link each food item to the main 'Food' node
+MERGE (foodCategory:Category {CategoryName: "Food"})
+MERGE (f)-[:BELONGS_TO]->(foodCategory)
+WITH f, row
+// Link to the Vegetarian or GlutenFree diet if applicable
+FOREACH (_ IN CASE WHEN row.IsVegetarian = "true" THEN [1] ELSE [] END |
+    MERGE (vegetarianDiet:Diet {DietName: "Vegetarian"})
+    MERGE (f)-[:HAS_DIET]->(vegetarianDiet)
+)
+FOREACH (_ IN CASE WHEN row.IsGlutenFree = "true" THEN [1] ELSE [] END |
+    MERGE (glutenFreeDiet:Diet {DietName: "GlutenFree"})
+    MERGE (f)-[:HAS_DIET]->(glutenFreeDiet)
+);
+
+// Drink items
+LOAD CSV WITH HEADERS FROM 'file:///drink_items_.csv' AS row
+MERGE (d:DrinkItem {
+    ItemID: toInteger(row.ItemID), 
+    ItemName: row.ItemName, 
+    ItemUnitPrice: toFloat(row.ItemUnitPrice), 
+    ItemDescription: row.ItemDescription
+})
+WITH d, row
+// Link each drink item to the main 'Drink' node
+MERGE (drinkCategory:Category {CategoryName: "Drink"})
+MERGE (d)-[:BELONGS_TO]->(drinkCategory);
+
+LOAD CSV WITH HEADERS FROM 'file:///transaction_items_.csv' AS row
+// Match the transaction
+MATCH (t:Transaction {TransactionID: toInteger(row.TransactionID)})
+// Match the item based on its type (Food or Drink)
+WITH t, row
+CALL {
+    WITH t, row
+    // Match the FoodItem if ItemType is "Food"
+    WITH t, row
+    MATCH (item:FoodItem {ItemID: toInteger(row.ItemID)})
+    WHERE row.ItemType = "Food"
+    RETURN item
+    UNION
+    // Match the DrinkItem if ItemType is "Drink"
+    WITH t, row
+    MATCH (item:DrinkItem {ItemID: toInteger(row.ItemID)})
+    WHERE row.ItemType = "Drink"
+    RETURN item
+}
+// Create a "CONTAINS" relationship between Transaction and Item
+MERGE (t)-[:CONTAINS {
+    Quantity: toInteger(row.Quantity),
+    TotalPrice: toFloat(row.TotalPrice)
+}]->(item);
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Step 4: Staff and Branch Management
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Load Positions
+LOAD CSV WITH HEADERS FROM 'file:///positions_.csv' AS row
+MERGE (p:Position {positionID: toInteger(row.PositionID), positionName: row.PositionName});
+
+
+// Load Staff
+LOAD CSV WITH HEADERS FROM 'file:///staffs_.csv' AS row
+MERGE (s:Staff {
+    staffID: toInteger(row.StaffID),
+    name: row.Name,
+    address: row.Address,
+    phone: row.Phone,
+    email: row.Email
+});
+
+
+
+// Create relationships between Staff and Position
+LOAD CSV WITH HEADERS FROM 'file:///staff_positions_.csv' AS row
+MATCH (s:Staff {staffID: toInteger(row.StaffID)})
+MATCH (p:Position {positionID: toInteger(row.PositionID)})
+MERGE (s)-[:HAS_POSITION]->(p);
+
+// Load Branches
+LOAD CSV WITH HEADERS FROM 'file:///branches_.csv' AS row
+MERGE (b:Branch {
+    branchID: toInteger(row.BranchID),
+    branchName: row.BranchName,
+    address: row.Address,
+    phone: row.Phone,
+    openingHour: row.OpeningHour,
+    closingHour: row.ClosingHour
+});
+
+// Create relationships between Staff and Branch with working hours
+LOAD CSV WITH HEADERS FROM 'file:///staff_branch_.csv' AS row
+MATCH (s:Staff {staffID: toInteger(row.StaffID)}),
+      (b:Branch {branchID: toInteger(row.BranchID)})
+MERGE (s)-[:WORKS_AT {
+    date: row.Date,
+    startTime: row.StartTime,
+    endTime: row.EndTime
+}]->(b);
+
+
+LOAD CSV WITH HEADERS FROM 'file:///transaction_staff_.csv' AS row
+MATCH (s:Staff {staffID: toInteger(row.StaffID)}), 
+      (t:Transaction {TransactionID: toInteger(row.TransactionID)})
+MERGE (s)-[:PROCESSES]->(t);
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Step 5: Discounts and Branch Promotions
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Load Discount
+LOAD CSV WITH HEADERS FROM 'file:///discount_.csv' AS row
+MERGE (p:Discount {
+		DiscountID: toInteger(row.DiscountID), 
+		DiscountCode: row.DiscountCode,
+		DiscountPercent: row.DiscountPercent,
+		IssueDate: row.IssueDate,
+		ExpiredDate: row.ExpiredDate
+		});
+		
+LOAD CSV WITH HEADERS FROM 'file:///branch_discount_.csv' AS row
+MATCH (b:Branch {branchID: toInteger(row.BranchID)}), 
+      (d:Discount {DiscountID: toInteger(row.DiscountID)})
+MERGE (b)-[:PROMOTE]->(d);
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Step 6: Create Index
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Create index
+CREATE INDEX FOR (c:Customer) ON (c.CustomerID);
+CREATE INDEX FOR (t:Transaction) ON (t.TransactionID);
+CREATE INDEX FOR (s:Staff) ON (s.StaffID);
+CREATE INDEX FOR (fi:FoodItem) on (fi.ItemID);
+CREATE INDEX FOR (di:DrinkItem) on (di.ItemID);
