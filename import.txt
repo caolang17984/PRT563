@@ -92,7 +92,9 @@ CREATE (c)-[:HAS_COUPON]->(coupon);
 // Step 3: Food and Drink Items
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 MERGE (foodCategory:Category {CategoryName: "Food"})
-MERGE (drinkCategory:Category {CategoryName: "Drink"});
+MERGE (drinkCategory:Category {CategoryName: "Drink"})
+MERGE (vegetarianDiet:Diet {DietName: "Vegetarian"})
+MERGE (glutenFreeDiet:Diet {DietName: "GlutenFree"});
 
 // Food items
 LOAD CSV WITH HEADERS FROM 'file:///food_items_.csv' AS row
@@ -105,17 +107,19 @@ MERGE (f:FoodItem {
 WITH f, row
 // Link each food item to the main 'Food' node
 MERGE (foodCategory:Category {CategoryName: "Food"})
-MERGE (f)-[:BELONGS_TO]->(foodCategory)
+MERGE (f)-[:CLASSIFIED_TO]->(foodCategory)
 WITH f, row
 // Link to the Vegetarian or GlutenFree diet if applicable
-FOREACH (_ IN CASE WHEN row.IsVegetarian = "true" THEN [1] ELSE [] END |
+FOREACH (_ IN CASE WHEN row.IsVegetarian = "TRUE" THEN [1] ELSE [] END |
     MERGE (vegetarianDiet:Diet {DietName: "Vegetarian"})
-    MERGE (f)-[:HAS_DIET]->(vegetarianDiet)
+    MERGE (f)-[:CLASSIFIED_TO]->(vegetarianDiet)
 )
-FOREACH (_ IN CASE WHEN row.IsGlutenFree = "true" THEN [1] ELSE [] END |
+FOREACH (_ IN CASE WHEN row.IsGlutenFree = "TRUE" THEN [1] ELSE [] END |
     MERGE (glutenFreeDiet:Diet {DietName: "GlutenFree"})
-    MERGE (f)-[:HAS_DIET]->(glutenFreeDiet)
+    MERGE (f)-[:CLASSIFIED_TO]->(glutenFreeDiet)
 );
+
+
 
 // Drink items
 LOAD CSV WITH HEADERS FROM 'file:///drink_items_.csv' AS row
@@ -129,6 +133,7 @@ WITH d, row
 // Link each drink item to the main 'Drink' node
 MERGE (drinkCategory:Category {CategoryName: "Drink"})
 MERGE (d)-[:BELONGS_TO]->(drinkCategory);
+
 
 LOAD CSV WITH HEADERS FROM 'file:///transaction_items_.csv' AS row
 // Match the transaction
