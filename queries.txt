@@ -38,7 +38,7 @@ WHERE t.TransactionDate = '13/10/2024'  // Filter transactions for 13th October 
 WITH t.Branch AS branchID, SUM(t.TotalAmount) AS totalRevenue
 ORDER BY totalRevenue DESC  // Order by total revenue in descending order
 LIMIT 1
-match(b:Branch {branchID:branchID})
+match(b:Branch {branchID:toInteger(branchID)})
 RETURN 
 b.branchName, 
 branchID, totalRevenue;
