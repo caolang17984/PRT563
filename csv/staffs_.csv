@@ -1,0 +1,19 @@
+StaffID,Name,Address,Phone,Email,PositionID
+1,Emily Clark,"5 Darwin St, Darwin NT 0800",(08) 8999 1111,emily.clark@gmail.com,3
+2,Daniel Lewis,"22 Palmerston St, Palmerston NT 0830",(08) 8998 2222,daniel.lewis@outlook.com,3
+3,Sophia Walker,"30 Parap Rd, Parap NT 0820",(08) 8997 3333,sophia.walker@hotmail.com,3
+4,Michael Brown,"101 Stuart Hwy, Stuart Park NT 0820",0421 123 456,michael.brown@gmail.com,1
+5,Olivia Davis,"5 Casuarina Dr, Casuarina NT 0810",(08) 8947 4455,olivia.davis@outlook.com,1
+6,William Miller,"12 McMillans Rd, Jingili NT 0810",0422 234 567,william.miller@hotmail.com,1
+7,Ava Wilson,"18 Nightcliff Rd, Nightcliff NT 0810",(08) 8996 5566,ava.wilson@gmail.com,2
+8,James Moore,"3 Fannie Bay Pl, Fannie Bay NT 0820",0423 345 678,james.moore@outlook.com,2
+9,Benjamin Anderson,"60 Knuckey St, Darwin City NT 0800",0424 456 789,benjamin.anderson@gmail.com,2
+10,Charlotte White,"17 Ludmilla Rd, Ludmilla NT 0820",(08) 8993 8899,charlotte.white@gmail.com,2
+11,Alexander Thompson,"40 Frances Dr, Palmerston NT 0830",0427 789 012,alexander.thompson@gmail.com,2
+12,Amelia Martin,"28 McLachlan St, Darwin NT 0800",(08) 8992 9900,amelia.martin@hotmail.com,2
+13,Henry Harris,"14 Trower Rd, Tiwi NT 0810",0426 678 901,henry.harris@outlook.com,4
+14,Abigail Robinson,"25 Hughes Ave, Darwin NT 0800",(08) 8990 1122,abigail.robinson@gmail.com,4
+15,Isabella Taylor,"22 Rapid Creek Rd, Rapid Creek NT 0810",(08) 8995 6677,isabella.taylor@hotmail.com,4
+16,Mia Thomas,"35 Farrar Blvd, Farrar NT 0830",(08) 8994 7788,mia.thomas@outlook.com,4
+17,Lucas Jackson,"19 Woodlake Blvd, Durack NT 0830",0425 567 890,lucas.jackson@hotmail.com,4
+18,Evelyn Garcia,"9 Zuccoli Parade, Zuccoli NT 0832",(08) 8991 0011,evelyn.garcia@outlook.com,4

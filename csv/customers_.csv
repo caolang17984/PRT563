@@ -1,0 +1,21 @@
+﻿CustomerID,Name,Phone,Email,Address,DoB
+1,John Smith,0487 123 456,john.smith@gmail.com,"12 Stuart Hwy, Darwin, NT",20/05/1985
+2,Emily Johnson,0487 234 567,emily.j@hotmail.com,"34 Mitchell St, Darwin, NT",11/07/1990
+3,Michael Brown,0487 345 678,michael.brown@outlook.com,"56 Cavenagh St, Darwin, NT",21/11/1988
+4,Sophia Davis,0487 456 789,sophia.davis@gmail.com,"78 Smith St, Darwin, NT",15/04/1995
+5,James Wilson,0487 567 890,james.wilson@hotmail.com,"90 Esplanade, Darwin, NT",09/03/1983
+6,Olivia Harris,0487 678 901,olivia.harris@outlook.com,"23 Bagot Rd, Millner, NT",27/10/1992
+7,William Martin,0487 789 012,william.martin@gmail.com,"45 Daly St, Larrakeyah, NT",12/08/1987
+8,Ava Thompson,0487 890 123,ava.thompson@hotmail.com,"67 Bennett St, Darwin, NT",19/02/1991
+9,Liam Moore,0487 901 234,liam.moore@outlook.com,"89 McMillans Rd, Jingili, NT",05/12/1986
+10,Isabella Lee,0487 012 345,isabella.lee@gmail.com,"101 Casuarina Dr, Darwin, NT",03/01/1994
+11,Henry King,0487 123 456,henry.king@hotmail.com,"13 Vanderlin Dr, Karama, NT",28/06/1989
+12,Mia Allen,0487 234 567,mia.allen@outlook.com,"25 Parap Rd, Parap, NT",09/09/1993
+13,Lucas Young,0487 345 678,lucas.young@gmail.com,"47 Rapid Creek Rd, Rapid Creek, NT",17/05/1991
+14,Amelia Scott,0487 456 789,amelia.scott@hotmail.com,"69 Bayview Blvd, Bayview, NT",11/11/1985
+15,Noah Hall,0487 567 890,noah.hall@outlook.com,"91 Berrimah Rd, Berrimah, NT",25/03/1990
+16,Charlotte Adams,0487 678 901,charlotte.adams@gmail.com,"14 Dick Ward Dr, Coconut Grove, NT",30/07/1995
+17,Ethan Baker,0487 789 012,ethan.baker@hotmail.com,"36 Abala Rd, Marrara, NT",18/12/1987
+18,Harper Clark,0487 890 123,harper.clark@outlook.com,"58 Vanderlin Dr, Karama, NT",22/01/1992
+19,Sebastian Wright,0487 901 234,sebastian.wright@gmail.com,"80 Trower Rd, Tiwi, NT",02/08/1989
+20,Ella Green,0487 012 345,ella.green@hotmail.com,"102 Lee Point Rd, Leanyer, NT",13/04/1994

@@ -1,0 +1,11 @@
+ItemID,ItemName,ItemUnitPrice,ItemDescription,Category,IsVegetarian,IsGlutenFree
+201,Scramble Egg on Toast,12.5,A classic breakfast dish,Breakfast,FALSE,FALSE
+202,Smashed Avocado,15,Avocado on toast,Breakfast,TRUE,FALSE
+203,Penny Bao,10.5,Delicious bao,Breakfast,FALSE,FALSE
+204,Mega Big Brekky,18,A big breakfast plate,Breakfast,FALSE,FALSE
+205,Vegan Fritter,16,Vegan and Gluten-free fritter,Breakfast,TRUE,TRUE
+206,Healthier N,10,A healthier version of pancakes,Pancakes,FALSE,FALSE
+207,Healthier GF,10,Gluten-free pancakes,Pancakes,FALSE,TRUE
+208,Belgium Waffles,12,Crispy Belgian waffles,Waffles,FALSE,FALSE
+209,Ham & Cheese Toastie,8,Ham and cheese toastie,Toasties,FALSE,FALSE
+210,Crispy Chicken Bao,12.5,Crispy chicken bao,Lunch,FALSE,FALSE

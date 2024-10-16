@@ -1,0 +1,12 @@
+ItemID,ItemName,ItemUnitPrice,ItemDescription,Category
+101,Affogato,5.0,Classic affogato,Coffee
+102,Cappuccino,4.5,Hot cappuccino,Coffee
+103,Freddo Cappuccino,6.0,Chilled cappuccino,Ice Drink
+104,Iced Mocha,5.5,Iced mocha with a twist,Ice Drink
+105,Blueberry Smoothie,7.0,Blueberry and banana smoothie,Raw Shakes
+106,Lemon & Ginger Tea,3.5,Lemon and ginger tea,Tea
+107,Water,2.0,Bottled water,Other
+108,Babyccino,2.0,Small cup of milk for kids,Kids
+109,Berricool,7.0,Refreshing berry smoothie,Fresh Juice/Smothies
+110,Chocolate Milkshake,6.0,Classic chocolate milkshake,Milkshake
+111,Oreo Thickshake,8.0,Thick Oreo shake,Thickshakes

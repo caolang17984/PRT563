@@ -1,0 +1,4 @@
+DiscountID,DiscountCode,DiscountPercent,IssueDate,ExpiredDate
+1,DIS101,5%,01/11/2024,31/12/2024
+2,DIS102,10%,01/01/2025,15/02/2025
+3,DIS103,15%,15/10/2024,31/12/2024
